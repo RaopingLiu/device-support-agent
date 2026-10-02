@@ -1,0 +1,30 @@
+.venv/
+.venv-*/
+.env
+.env.*
+!.env.example
+__pycache__/
+.pytest_cache/
+data/runtime/
+data/raw/
+# 官方文档正文、检索片段和原始调用输出留在本地，可通过脚本重新生成。
+data/docs/*.txt
+data/chunks.json
+data/fetch_errors.json
+docs/evidence/
+# 本机部署期间使用的下载工具和官方配置对照副本。
+scripts/download_image.py
+docker-compose.official.yml
+.upload-tools/
+*.log
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.pem
+*.key
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

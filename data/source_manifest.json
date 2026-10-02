@@ -1,0 +1,80 @@
+[
+  {
+    "doc_id": "ap-offline",
+    "title": "Troubleshooting Guide for AP Going Offline Abnormally",
+    "source_url": "https://support.omadanetworks.com/au/document/13235/",
+    "source_type": "official_faq",
+    "device_type": "ap",
+    "model_scope": "family",
+    "version_scope": "未限定具体固件版本；仅作系列通用排查参考",
+    "retrieved_at": "2026-09-13T08:30:25.261924+00:00",
+    "path": "data/docs/ap-offline.txt",
+    "content_hash": "a171f4daeaee600f9cc92006aacce6350e37279e41d25d31b9dfebb8b46a6e8f",
+    "characters": 4916
+  },
+  {
+    "doc_id": "gateway-adoption",
+    "title": "How to Troubleshoot Omada Gateway Adoption Failure",
+    "source_url": "https://support.omadanetworks.com/us/document/13204/",
+    "source_type": "official_faq",
+    "device_type": "gateway",
+    "model_scope": "family",
+    "version_scope": "未限定具体固件版本；仅作系列通用排查参考",
+    "retrieved_at": "2026-09-13T08:30:25.311556+00:00",
+    "path": "data/docs/gateway-adoption.txt",
+    "content_hash": "e31221fd906cb994cb73c6f72da0d0333f1481f1475e756c14b0bdc42f3f6420",
+    "characters": 11214
+  },
+  {
+    "doc_id": "poe-troubleshooting",
+    "title": "Why Does My PoE-Powered Device Not Work Properly When Connected to a PoE Switch",
+    "source_url": "https://support.omadanetworks.com/us/document/12924/",
+    "source_type": "official_faq",
+    "device_type": "switch",
+    "model_scope": "family",
+    "version_scope": "未限定具体固件版本；仅作系列通用排查参考",
+    "retrieved_at": "2026-09-13T08:30:25.311556+00:00",
+    "path": "data/docs/poe-troubleshooting.txt",
+    "content_hash": "4301d1d7eb79ff88209de92dc9bf0bc29dae9ba63423c38ff2e7e0c0d0a1a678",
+    "characters": 6658
+  },
+  {
+    "doc_id": "wifi-connection",
+    "title": "How to Troubleshoot Wi‑Fi Connection Failures on Omada EAP",
+    "source_url": "https://support.omadanetworks.com/en/document/13171/",
+    "source_type": "official_faq",
+    "device_type": "ap",
+    "model_scope": "family",
+    "version_scope": "未限定具体固件版本；仅作系列通用排查参考",
+    "retrieved_at": "2026-09-13T08:30:25.263094+00:00",
+    "path": "data/docs/wifi-connection.txt",
+    "content_hash": "f946d63be6879c6c877a2bcf6553943028695a157b425a4f3cbd29810ce736d3",
+    "characters": 9830
+  },
+  {
+    "doc_id": "wireless-issues",
+    "title": "How to Troubleshoot Wireless Issues on Omada Access Points",
+    "source_url": "https://support.omadanetworks.com/us/document/13002/",
+    "source_type": "official_faq",
+    "device_type": "ap",
+    "model_scope": "family",
+    "version_scope": "未限定具体固件版本；仅作系列通用排查参考",
+    "retrieved_at": "2026-09-13T08:30:25.263094+00:00",
+    "path": "data/docs/wireless-issues.txt",
+    "content_hash": "3e86f3020d627e0895af323c9a8d3e9a7298555e4c8b15fa62dd1e8d5bcf43eb",
+    "characters": 7750
+  },
+  {
+    "doc_id": "wireless-performance",
+    "title": "How to Optimize Wireless Performance for Omada EAPs",
+    "source_url": "https://support.omadanetworks.com/us/document/13001/",
+    "source_type": "official_faq",
+    "device_type": "ap",
+    "model_scope": "family",
+    "version_scope": "未限定具体固件版本；仅作系列通用排查参考",
+    "retrieved_at": "2026-09-13T08:30:25.310086+00:00",
+    "path": "data/docs/wireless-performance.txt",
+    "content_hash": "e25b3be9e1b284ac16e0ca37453f55f99dac29ecc6d4e9dcc6454a42743c7618",
+    "characters": 8359
+  }
+]

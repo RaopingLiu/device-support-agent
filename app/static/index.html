@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>网域 · 网络运维助手</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <!-- 桌面侧栏：data-view 由 app.js 绑定切换事件。 -->
+    <aside class="nav">
+      <a class="brand" href="/"
+        >◈ <span>网域<small>NETWORK SUPPORT</small></span></a
+      >
+      <div class="workspace">工作空间<span>演示网络 · 本地</span></div>
+      <button class="navitem active" data-view="chat">◉ 运维助手</button
+      ><button class="navitem" data-view="assets">▦ 设备资产</button>
+      <div class="navbottom">
+        <span class="dot"></span> 模拟环境
+        <div>设备状态为预设快照<br />工单保存在本机</div>
+      </div>
+    </aside>
+    <main>
+      <header>
+        <div class="crumb">工作空间 <span>/</span> 网络运维</div>
+        <div class="mobiletabs">
+          <button class="textbtn" data-view="chat">助手</button
+          ><button class="textbtn" data-view="assets">设备</button>
+        </div>
+        <div class="tag">DEMO <span>多站点协同</span></div>
+      </header>
+      <!-- 概览数值由后端接口返回后填入对应 ID。 -->
+      <section class="intro">
+        <div>
+          <div class="eyebrow">NETWORK OPERATIONS</div>
+          <h1>让网络问题，有据可循。</h1>
+          <p>定位设备、查阅资料、整理报障，在一个会话里完成。</p>
+        </div>
+        <div class="stats">
+          <div><strong id="siteCount">—</strong><span>模拟站点</span></div>
+          <div><strong id="deviceCount">—</strong><span>设备资产</span></div>
+          <div><strong id="chunkCount">—</strong><span>知识片段</span></div>
+        </div>
+      </section>
+      <!-- 聊天主区域：消息、案例选择和输入表单。 -->
+      <section id="chatView" class="grid">
+        <div class="conversation">
+          <div class="panelhead">
+            <div><span class="dot"></span> 运维会话</div>
+            <button id="newSession" class="textbtn">＋ 新建会话</button>
+          </div>
+          <div class="scenario">
+            <label for="scenario">演示案例</label
+            ><select id="scenario"></select
+            ><span>新会话生效</span>
+          </div>
+          <div id="messages" aria-live="polite">
+            <div class="welcome">
+              <div class="welcomeicon">◈</div>
+              <h2>从一个问题开始</h2>
+              <p>可以告诉我设备编号，也可以描述站点和故障现象。</p>
+              <div class="examples">
+                <button>杭州仓库有哪些 AP？</button
+                ><button>S01-AP04 在线吗？</button
+                ><button>杭州仓库的仓储区 Wi-Fi 掉线，怎么排查？</button
+                ><button>什么是 PoE？</button>
+              </div>
+            </div>
+          </div>
+          <div id="busy" hidden>正在查询与整理，请稍候…</div>
+          <!-- 提交事件由 JavaScript 接管，不做浏览器整页表单跳转。 -->
+          <form id="composer">
+            <label class="sr-only" for="message">输入问题</label
+            ><textarea
+              id="message"
+              rows="2"
+              maxlength="4000"
+              placeholder="描述网络问题，或输入设备编号…"
+            ></textarea>
+            <div class="composebottom">
+              <span>Enter 发送 · Shift + Enter 换行</span
+              ><button id="send" type="submit">发送 ↗</button>
+            </div>
+          </form>
+        </div>
+        <!-- 工具依据和待确认工单容器，具体内容由 JavaScript 动态渲染。 -->
+        <aside class="context">
+          <section class="card">
+            <div class="cardtitle">
+              本轮依据 <span id="evidenceCount">0</span>
+            </div>
+            <div id="evidence" class="empty">
+              查询设备或检索资料后，依据会显示在这里。
+            </div>
+          </section>
+          <section class="card">
+            <div class="cardtitle">报障工单 <span>需确认</span></div>
+            <div id="draft" class="empty">
+              尚无待确认草稿。需要报障时，告诉助手即可。
+            </div>
+          </section>
+          <section class="hint">
+            <h3>先确认，再执行</h3>
+            <p>助手可以整理工单草稿。只有点击确认提交，才会保存正式工单。</p>
+          </section>
+        </aside>
+      </section>
+      <!-- 设备资产视图：直接请求资产接口，不调用大模型。 -->
+      <section id="assetsView" hidden>
+        <div class="assetbar">
+          <h2>设备资产</h2>
+          <select id="siteFilter" aria-label="站点筛选"></select>
+        </div>
+        <p class="muted">
+          模拟资产与连接关系。运行状态请在会话中查询，以获取当前案例的快照。
+        </p>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>设备编号</th>
+                <th>站点</th>
+                <th>区域</th>
+                <th>类型</th>
+                <th>型号</th>
+              </tr>
+            </thead>
+            <tbody id="assetRows"></tbody>
+          </table>
+        </div>
+        <button id="moreAssets" class="textbtn">加载更多</button>
+      </section>
+      <div id="toast" role="status" hidden></div>
+    </main>
+    <!-- 页面结构加载后执行交互脚本，开始恢复会话。 -->
+    <script src="/static/app.js"></script>
+  </body>
+</html>

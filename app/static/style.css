@@ -1,0 +1,658 @@
+/* 统一主题色；后续选择器使用这些变量。 */
+:root {
+  --bg: #f4f6f8;
+  --ink: #192d3c;
+  --muted: #788591;
+  --line: #e4e9ed;
+  --teal: #167b75;
+  --nav: #132d39;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font:
+    14px/1.65 "Segoe UI",
+    "Microsoft YaHei",
+    sans-serif;
+}
+/* 侧栏导航与品牌区域。 */
+.nav {
+  width: 208px;
+  position: fixed;
+  inset: 0 auto 0 0;
+  background: var(--nav);
+  color: #d3e3e9;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+}
+.brand {
+  display: flex;
+  gap: 12px;
+  font-size: 29px;
+  align-items: center;
+  text-decoration: none;
+  color: #fff;
+  line-height: 1.25;
+}
+.brand span {
+  font-size: 23px;
+  font-weight: 650;
+}
+.brand small {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 2px;
+  margin-top: 7px;
+  color: #91afb9;
+}
+.workspace {
+  margin: 47px 10px 22px;
+  font-size: 11px;
+  color: #91a8b3;
+}
+.workspace span {
+  display: block;
+  font-size: 13px;
+  color: #d3e3e9;
+  margin-top: 8px;
+}
+.navitem {
+  background: none;
+  border: 0;
+  text-align: left;
+  color: #a8bec8;
+  padding: 13px 15px;
+  border-radius: 7px;
+  margin: 4px 0;
+  font: inherit;
+  cursor: pointer;
+}
+.navitem.active {
+  background: #24505b;
+  color: white;
+}
+.navbottom {
+  margin-top: auto;
+  font-size: 12px;
+}
+.navbottom div {
+  font-size: 11px;
+  color: #8da7b3;
+  line-height: 1.9;
+  margin-top: 10px;
+}
+.dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #4cb79b;
+  border-radius: 50%;
+  margin-right: 7px;
+}
+main {
+  margin-left: 208px;
+  padding: 0 36px 32px;
+  max-width: 1900px;
+}
+header {
+  height: 73px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+.crumb {
+  color: var(--muted);
+}
+.crumb span {
+  padding: 0 14px;
+  color: #bdc7ce;
+}
+.tag {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--teal);
+  font-weight: 700;
+}
+.tag span {
+  margin-left: 12px;
+  color: var(--muted);
+  font-weight: 400;
+}
+/* 页面简介及站点、设备、知识片段统计。 */
+.intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 33px 0 28px;
+  gap: 20px;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--teal);
+  font-weight: 650;
+}
+h1 {
+  font-size: 28px;
+  letter-spacing: -0.6px;
+  margin: 8px 0;
+}
+p {
+  margin: 0;
+  color: var(--muted);
+}
+.stats {
+  display: flex;
+  gap: 33px;
+  padding-right: 12px;
+}
+.stats strong {
+  display: block;
+  font-size: 28px;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+.stats span {
+  font-size: 11px;
+  color: var(--muted);
+}
+/* 聊天区域与右侧依据面板的主布局。 */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 22px;
+}
+.conversation {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 266px);
+  min-height: 520px;
+  overflow: hidden;
+}
+.panelhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 17px 22px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+}
+.textbtn {
+  background: none;
+  border: 0;
+  color: var(--teal);
+  font: inherit;
+  cursor: pointer;
+  font-size: 12px;
+}
+.scenario {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: #fafcfc;
+  padding: 10px 22px;
+  font-size: 11px;
+  color: var(--muted);
+}
+select {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink);
+  padding: 6px 8px;
+  border-radius: 5px;
+  font: inherit;
+  max-width: 100%;
+}
+.scenario select {
+  max-width: 290px;
+  font-size: 11px;
+}
+.scenario span {
+  margin-left: auto;
+  font-size: 10px;
+}
+/* 消息滚动区域、欢迎语和示例问题。 */
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px;
+  scroll-behavior: smooth;
+}
+.welcome {
+  max-width: 470px;
+  margin: 28px auto;
+  text-align: center;
+}
+.welcomeicon {
+  width: 48px;
+  height: 48px;
+  background: #e8f3f0;
+  color: var(--teal);
+  border-radius: 14px;
+  margin: auto;
+  font-size: 33px;
+}
+.welcome h2 {
+  font-size: 21px;
+  margin: 15px 0 6px;
+}
+.welcome p {
+  font-size: 12px;
+}
+.examples {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 25px;
+}
+.examples button {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  color: #536672;
+  cursor: pointer;
+}
+.examples button:hover {
+  border-color: #8ebdb6;
+  background: #f8fcfa;
+}
+/* 不同角色消息、引用来源与标签。 */
+.message {
+  margin: 0 0 22px;
+  max-width: 95%;
+}
+.message .role {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  margin-bottom: 7px;
+}
+.message .body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.9;
+  font-size: 13px;
+}
+.message.user {
+  margin-left: 15%;
+  padding: 12px 16px;
+  background: #edf4f4;
+  border-radius: 9px;
+}
+.message.system {
+  padding: 12px;
+  border-left: 3px solid var(--teal);
+  background: #f1f8f5;
+}
+.source {
+  display: block;
+  color: var(--teal);
+  font-size: 11px;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #edf4f1;
+  font-size: 10px;
+  color: var(--teal);
+  margin-right: 5px;
+}
+/* 输入框、发送按钮和等待状态。 */
+#composer {
+  margin: 0 18px 16px;
+  border: 1px solid #cfdcdd;
+  border-radius: 9px;
+  padding: 12px;
+  box-shadow: 0 2px 5px #193b4210;
+}
+textarea {
+  display: block;
+  width: 100%;
+  resize: none;
+  border: 0;
+  outline: none;
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+}
+.composebottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+.composebottom span {
+  font-size: 10px;
+  color: #9ba7af;
+}
+button[type="submit"],
+.primary {
+  border: 0;
+  border-radius: 6px;
+  background: var(--teal);
+  color: #fff;
+  padding: 8px 15px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+#busy {
+  font-size: 12px;
+  color: var(--teal);
+  padding: 0 22px 8px;
+}
+/* 侧栏依据和工单卡片。 */
+.context {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px;
+}
+.cardtitle {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 650;
+  font-size: 13px;
+  margin-bottom: 17px;
+}
+.cardtitle span {
+  font-weight: 400;
+  font-size: 10px;
+  color: var(--muted);
+  background: #f3f6f7;
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+.empty {
+  font-size: 12px;
+  line-height: 1.9;
+  color: var(--muted);
+}
+#evidence {
+  max-height: 310px;
+  overflow: auto;
+}
+.evidenceitem {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+}
+.evidenceitem strong {
+  font-size: 12px;
+  display: block;
+  color: var(--ink);
+  font-weight: 550;
+}
+.evidenceitem pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 10px/1.7 inherit;
+  background: #f5f8f9;
+  padding: 8px;
+  max-height: 160px;
+  overflow: auto;
+}
+.hint {
+  padding: 4px 12px;
+}
+.hint h3 {
+  font-size: 12px;
+  font-weight: 550;
+  margin: 0 0 7px;
+}
+.hint p {
+  font-size: 11px;
+  line-height: 1.9;
+}
+/* 草稿编辑表单与提交按钮。 */
+.draftlabel {
+  display: block;
+  margin-top: 9px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.draftinput {
+  width: 100%;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font: 12px/1.6 inherit;
+  margin: 4px 0;
+  color: var(--ink);
+}
+.draftactions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.secondary {
+  border: 1px solid var(--line);
+  background: white;
+  padding: 7px 10px;
+  border-radius: 5px;
+  font: 12px inherit;
+  cursor: pointer;
+}
+.muted {
+  font-size: 12px;
+  margin: 12px 0;
+}
+/* 资产筛选栏和设备表格。 */
+.assetbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tablewrap {
+  overflow: auto;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+  font-size: 12px;
+}
+th,
+td {
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--line);
+}
+th {
+  background: #f8fafb;
+  color: var(--muted);
+  font-weight: 500;
+}
+/* 临时提示与辅助显示。 */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #173841;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  z-index: 10;
+  max-width: 80vw;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+[hidden] {
+  display: none !important;
+}
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+  outline: 2px solid #56ab9d;
+  outline-offset: 3px;
+}
+/* 按视口宽度调整布局，适配窄窗口与手机。 */
+@media (max-width: 1100px) {
+  main {
+    padding: 0 22px 25px;
+    margin-left: 180px;
+  }
+  .nav {
+    width: 180px;
+    padding: 25px 15px;
+  }
+  .grid {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+  .stats {
+    gap: 18px;
+  }
+  .intro h1 {
+    font-size: 24px;
+  }
+}
+/* 按视口宽度调整布局，适配窄窗口与手机。 */
+@media (max-width: 850px) {
+  .nav {
+    width: 70px;
+    padding: 25px 10px;
+  }
+  .brand span,
+  .workspace,
+  .navbottom,
+  .navitem {
+    display: none;
+  }
+  .brand {
+    justify-content: center;
+  }
+  main {
+    margin-left: 70px;
+    padding: 0 18px 25px;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .context {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .hint {
+    display: none;
+  }
+  .conversation {
+    height: 650px;
+  }
+  .stats {
+    gap: 16px;
+  }
+  .stats strong {
+    font-size: 23px;
+  }
+}
+/* 按视口宽度调整布局，适配窄窗口与手机。 */
+@media (max-width: 550px) {
+  .nav {
+    display: none;
+  }
+  main {
+    margin: 0;
+    padding: 0 12px 20px;
+  }
+  header {
+    height: 55px;
+  }
+  .intro {
+    display: block;
+    padding: 22px 0;
+  }
+  .stats {
+    margin-top: 18px;
+    justify-content: space-between;
+  }
+  .grid {
+    gap: 14px;
+  }
+  .context {
+    grid-template-columns: 1fr;
+  }
+  .conversation {
+    height: 620px;
+  }
+  .scenario {
+    padding: 10px 12px;
+  }
+  .scenario span {
+    display: none;
+  }
+  .examples {
+    grid-template-columns: 1fr;
+  }
+  .welcome {
+    margin-top: 10px;
+  }
+  .tag span {
+    display: none;
+  }
+}
+.mobiletabs {
+  display: none;
+}
+.stats span {
+  white-space: nowrap;
+}
+.evidenceitem pre {
+  font-family: inherit;
+  line-height: 1.8;
+}
+.body code {
+  background: #edf2f4;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+/* 按视口宽度调整布局，适配窄窗口与手机。 */
+@media (max-width: 850px) {
+  .mobiletabs {
+    display: flex;
+    gap: 6px;
+  }
+  .intro {
+    flex-wrap: wrap;
+  }
+  .stats {
+    flex-shrink: 0;
+  }
+}

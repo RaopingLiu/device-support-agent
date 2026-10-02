@@ -1,0 +1,46 @@
+# 本项目实际使用的部署配置：启动知识库依赖；Python 后端由 start.ps1 单独启动。
+name: network-support
+services:
+  # etcd 为 Milvus 保存元数据，应用不直接查询它。
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.25
+    command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    environment:
+      ETCD_AUTO_COMPACTION_MODE: revision
+      ETCD_AUTO_COMPACTION_RETENTION: '1000'
+      ETCD_QUOTA_BACKEND_BYTES: '4294967296'
+    volumes: [etcd-data:/etcd]
+    mem_limit: 1g
+  # MinIO 为 Milvus 提供对象存储，保存其使用的数据对象。
+  minio:
+    image: quay.io/minio/minio:RELEASE.2024-12-18T13-15-44Z
+    command: minio server /minio_data --console-address ':9001'
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes: [minio-data:/minio_data]
+    mem_limit: 1g
+  # Milvus 单机服务：rag.py 通过 19530 端口执行向量入库与检索。
+  standalone:
+    image: docker.1panel.live/milvusdb/milvus:v3.0.1
+    command: [milvus, run, standalone]
+    security_opt: [seccomp:unconfined]
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+      MQ_TYPE: woodpecker
+    volumes: [milvus-data:/var/lib/milvus]
+    ports: ['127.0.0.1:19530:19530', '127.0.0.1:9091:9091'] # 仅绑定本机回环地址。
+    mem_limit: 4g
+    depends_on: [etcd, minio] # 控制启动顺序，不等于依赖已准备好接收请求。
+    healthcheck:
+      test: [CMD, curl, -f, 'http://localhost:9091/healthz']
+      interval: 15s
+      timeout: 5s
+      start_period: 90s
+      retries: 8
+# 命名卷保存容器数据；向量本体不在项目的 chunks.json 或 index.json 里。
+volumes:
+  etcd-data:
+  minio-data:
+  milvus-data:
