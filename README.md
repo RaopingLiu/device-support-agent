@@ -4,13 +4,15 @@
 
 阅读代码时先看 [目录与模块清单](docs/目录与模块清单.md)：逐项说明文件用途、生成数据、工具职责与主要调用路径。
 
-技术栈：Python 3.11、FastAPI、LangChain、LangGraph、Milvus、SQLite，以及原生 HTML / CSS / JavaScript 前端。
+技术栈：React、TypeScript、Vite、React Router、Tailwind CSS、shadcn/ui；Python 3.11、FastAPI、LangChain、LangGraph、Milvus、SQLite。
+
+React 工作台包含运维助手、设备资产、工单中心三个页面。设备详情可以带设备编号进入排查对话；工单草稿经编辑、保存和明确确认后进入工单详情。改造过程和验证边界见 [全栈改造记录](docs/全栈改造记录.md)，前端模块说明见 [frontend/README.md](frontend/README.md)。
 
 **演示边界：** 10 个虚构站点、140 台模拟设备、4 个预设状态案例。没有连接真实网络设备、监控系统或企业工单平台；不会远程修改配置或自动通知运维人员。
 
 ## 运行
 
-需要 Python 3.11、Docker 的 Linux 容器环境、支持工具调用的 Chat Completions 兼容模型服务，以及本地 Embedding 模型。以下命令从本项目根目录运行。
+需要 Python 3.11、Node.js（当前验证使用 24）、Docker 的 Linux 容器环境、支持工具调用的 Chat Completions 兼容模型服务，以及本地 Embedding 模型。以下命令从本项目根目录运行。
 
 首次安装主程序（PowerShell）：
 
@@ -33,10 +35,14 @@ docker --context desktop-linux compose -f compose.yaml up -d
 .\.venv\Scripts\python.exe scripts\seed_data.py
 .\.venv\Scripts\python.exe scripts\fetch_docs.py
 .\.venv\Scripts\python.exe scripts\ingest_docs.py
-.\start.ps1
+.\start.ps1 -BuildFrontend
 ```
 
-已入库且未修改文档时不必重复入库。网页：<http://127.0.0.1:8765>。启动脚本以前台方式运行，Ctrl+C 停止后端。
+`-BuildFrontend` 会按 `frontend/package-lock.json` 安装前端依赖并构建。首次安装或前端源码更新后使用它；已有当前构建时直接运行 `.\start.ps1`。网页：<http://127.0.0.1:8765>。启动脚本以前台方式运行，Ctrl+C 停止后端。
+
+前端开发可在另一个终端运行 `npm --prefix frontend run dev`，其 `/api` 请求代理到 8765 端口。构建产物由 FastAPI 同源提供，设备和工单详情链接支持直接打开与刷新。原生页面保留在 `/legacy` 作历史对照。
+
+已入库且未修改文档时不必重复入库。
 
 `desktop-linux` 是 Docker Desktop 的本地 context；其他环境请使用自己的 Linux 容器 context。运行入库前，应等待 Milvus 健康接口 `http://127.0.0.1:9091/healthz` 返回成功。
 
@@ -91,11 +97,13 @@ Milvus 只存知识片段和来源。语义检索与设备类型、型号适用�
 ## 主要文件与调用路径
 
 ```text
-网页 app/static/ → app/main.py → app/graph.py
+React frontend/src/ → app/main.py → app/graph.py
                                ├─ app/tools.py → app/db.py → SQLite
                                ├─ app/rag.py → Embedding 子进程 + Milvus
                                └─ app/tickets.py → 草稿
-网页明确确认 → app/main.py → app/tickets.py → SQLite 事务 → 正式工单
+React 明确确认 → app/main.py → app/tickets.py → SQLite 事务 → 正式工单
+设备页 → 会话设备列表/详情 API → SQLite 场景快照与关系
+工单页 → 会话工单列表/详情 API → SQLite 已确认工单
 scripts/fetch_docs.py → 本地正文 → scripts/ingest_docs.py → Milvus
 ```
 
@@ -107,11 +115,17 @@ scripts/fetch_docs.py → 本地正文 → scripts/ingest_docs.py → Milvus
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
+npm --prefix frontend run lint
+npm --prefix frontend run build
 ```
 
 自动化测试使用独立临时业务数据库。模型故障与工具回传的部分单元测试使用明确的测试替身，不能代替真实模型 / Milvus 验证。实际外部调用、网页核对和剩余限制见 `docs/验证记录.md`。
 
-2026-10-02 上传前重新运行：`14 passed, 1 warning`；`pip check` 返回 `No broken requirements found`。本次未重新执行真实模型、Milvus 或浏览器完整流程，相关记录属于 2026-09-13 的历史验证。
+React 的浏览器回归启动独立测试后端，使用真实 HTTP 和 SQLite，模型使用明确的测试替身。执行方式及本次结果见 `docs/全栈改造记录.md`。当前聊天继续返回完整 JSON，尚未实现 SSE 或逐 token 输出。
+
+2026-10-20 React 改造：Python `18 passed`；前端 lint、TypeScript/Vite 构建通过；Edge 浏览器回归 `3 passed`。另在真实页面中通过现有模型配置完成“设备查询 → 草稿编辑 → 明确确认 → 工单刷新恢复”，生成本地演示工单 `T-0B83A3858F04`。本次没有重跑 Milvus 检索质量评估，详细范围见改造记录。
+
+历史记录，2026-10-02 上传前重新运行：`14 passed, 1 warning`；`pip check` 返回 `No broken requirements found`。当时未重新执行真实模型、Milvus 或浏览器完整流程，相关记录属于 2026-09-13 的历史验证。
 
 同日另将 Git 已提交源码导出到临时目录，不携带 `.env`、数据库、官方正文、片段或运行缓存，复用现有项目虚拟环境运行测试，结果为 `14 passed, 1 warning`。这验证了现有测试不依赖未提交的本机数据，不等同于在全新机器上从零安装依赖成功。
 
