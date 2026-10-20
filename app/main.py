@@ -2,12 +2,12 @@
 import logging
 import threading
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from . import config, db, tickets
-from .tools import device_search
+from .tools import device_search, device_status, device_neighbors
 
 assistant=None
 locks={}
@@ -79,9 +79,22 @@ def get_session(sid:str):
 
 @app.get('/api/sessions/{sid}/devices')
 # 设备列表直接查 SQL，无需调用模型。
-def devices(sid:str,site_id:str='',device_type:str='',offset:int=0):
+def devices(sid:str,site_id:str='',device_type:str='',q:str=Query('',max_length=100),
+            offset:int=Query(0,ge=0),limit:int=Query(20,ge=1,le=50)):
     db.session(sid)
-    return device_search(site_id=site_id,device_type=device_type,offset=offset)
+    return device_search(site_id=site_id,device_type=device_type,q=q,offset=offset,limit=limit)
+
+@app.get('/api/sessions/{sid}/devices/{device_id}')
+def device_detail(sid:str,device_id:str):
+    session=db.session(sid)
+    found=device_search(device_id=device_id)['devices']
+    if not found: raise LookupError('设备不存在')
+    return {'device':found[0],'status':device_status(session['scenario_id'],device_id),
+            'neighbors':device_neighbors(device_id)}
+
+@app.get('/api/sessions/{sid}/tickets')
+def ticket_list(sid:str,offset:int=Query(0,ge=0),limit:int=Query(20,ge=1,le=50)):
+    return tickets.list_for_session(sid,limit,offset)
 
 @app.post('/api/sessions/{sid}/messages')
 # 聊天入口：存用户消息→运行图→存回答→返回网页。

@@ -8,10 +8,13 @@ def ok(data): return {'status':'ok','data':data,'error':None}
 def failure(code,message): return {'status':'error','data':None,'error':{'code':code,'message':message}}
 
 # 资产查询共用函数：字段白名单、参数绑定、分页，不允许模型自由生成 SQL。
-def device_search(site_id='',area='',device_type='',device_id='',limit=20,offset=0):
+def device_search(site_id='',area='',device_type='',device_id='',limit=20,offset=0,q=''):
     clauses=[]; args=[]
     for field,value in [('site_id',site_id),('area',area),('device_type',device_type),('device_id',device_id)]:
         if value: clauses.append(field+'=?'); args.append(value)  # 用户值通过占位符绑定，不拼成 SQL。
+    if q.strip():
+        clauses.append('(instr(lower(device_id),lower(?))>0 OR instr(lower(model),lower(?))>0)')
+        args.extend([q.strip(),q.strip()])
     where=' WHERE '+' AND '.join(clauses) if clauses else ''
     # 限制返回量，避免设备列表撑满上下文。
     limit=max(1,min(int(limit),50)); offset=max(0,int(offset))
@@ -19,6 +22,24 @@ def device_search(site_id='',area='',device_type='',device_id='',limit=20,offset
         total=c.execute('SELECT count(*) FROM devices'+where,args).fetchone()[0]
         rows=c.execute('SELECT * FROM devices'+where+' ORDER BY device_id LIMIT ? OFFSET ?',args+[limit,offset]).fetchall()
     return {'devices':[dict(r) for r in rows],'total':total,'next_offset':offset+limit if offset+limit<total else None}
+
+# 页面和模型工具共用事实查询，场景始终由服务端会话决定。
+def device_status(scenario,device_id):
+    with db.connect() as c:
+        row=c.execute('SELECT * FROM device_status WHERE scenario_id=? AND device_id=?',(scenario,device_id)).fetchone()
+    if not row: return None
+    data=dict(row)
+    data['metrics']=json.loads(data.pop('metrics_json'))
+    data['alarms']=json.loads(data.pop('alarms_json'))
+    data['is_simulated']=True
+    return data
+
+def device_neighbors(device_id,relation=''):
+    with db.connect() as c:
+        if not c.execute('SELECT 1 FROM devices WHERE device_id=?',(device_id,)).fetchone():
+            raise LookupError('设备不存在')
+        rows=c.execute('SELECT * FROM device_links WHERE (src_device_id=? OR dst_device_id=?) AND (?="" OR relation=?)',(device_id,device_id,relation,relation)).fetchall()
+    return [dict(r) for r in rows]
 
 # 服务端按会话构建工具，场景通过闭包注入，不让模型自行指定。
 def make_tools(sid):
@@ -39,20 +60,16 @@ def make_tools(sid):
     # 查当前案例的带时间快照，未找到记录不等于网络或数据库失败。
     def get_device_status(device_id: str) -> dict:
         """查询本会话模拟案例下的设备状态快照。online 不证明历史无故障；必须说明时间与模拟属性。"""
-        with db.connect() as c:
-            row=c.execute('SELECT * FROM device_status WHERE scenario_id=? AND device_id=?',(scenario,device_id)).fetchone()
-        if not row: return {'status':'not_found','data':None,'error':{'code':'DEVICE_NOT_FOUND','message':'设备不存在或无状态记录'}}
-        data=dict(row); data['metrics']=json.loads(data.pop('metrics_json')); data['alarms']=json.loads(data.pop('alarms_json')); data['is_simulated']=True
+        data=device_status(scenario,device_id)
+        if data is None: return {'status':'not_found','data':None,'error':{'code':'DEVICE_NOT_FOUND','message':'设备不存在或无状态记录'}}
         return ok(data)
 
     # 只返回一跳关系；物理上联与控制器管理关系分开标记。
     def get_device_neighbors(device_id: str, relation: str = '') -> dict:
         """查询一跳设备关系与端口。relation 可为 uplink 或 managed_by；区分物理上联和控制器管理。"""
-        with db.connect() as c:
-            if not c.execute('SELECT 1 FROM devices WHERE device_id=?',(device_id,)).fetchone():
-                return {'status':'not_found','data':None,'error':{'code':'DEVICE_NOT_FOUND','message':'设备不存在'}}
-            rows=c.execute('SELECT * FROM device_links WHERE (src_device_id=? OR dst_device_id=?) AND (?="" OR relation=?)',(device_id,device_id,relation,relation)).fetchall()
-        return ok([dict(r) for r in rows])
+        try: return ok(device_neighbors(device_id,relation))
+        except LookupError:
+            return {'status':'not_found','data':None,'error':{'code':'DEVICE_NOT_FOUND','message':'设备不存在'}}
 
     # RAG 入口只查资料；底层编码和向量搜索交给 rag.py。
     def search_knowledge(query: str, device_type: str = '', model: str = '', top_k: int = 5) -> dict:

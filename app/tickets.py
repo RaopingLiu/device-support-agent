@@ -83,6 +83,15 @@ def get(sid,tid):
         if not row: raise LookupError('当前会话中没有该工单')
         return unpack(row)
 
+# 工作台分页列表仅返回当前会话的正式工单。
+def list_for_session(sid,limit=20,offset=0):
+    db.session(sid)
+    with db.connect() as c:
+        total=c.execute('SELECT count(*) FROM tickets WHERE session_id=?',(sid,)).fetchone()[0]
+        rows=c.execute('SELECT * FROM tickets WHERE session_id=? ORDER BY created_at DESC,ticket_id DESC LIMIT ? OFFSET ?',(sid,limit,offset)).fetchall()
+    return {'tickets':[unpack(row) for row in rows],'total':total,
+            'next_offset':offset+limit if offset+limit<total else None}
+
 # 提供最近 5 份真实工单摘要，帮助模型理解“刚创建的工单”。
 def recent(sid):
     with db.connect() as c:
