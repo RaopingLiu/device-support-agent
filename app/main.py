@@ -30,8 +30,10 @@ async def lifespan(app):
     embedder.close()
 
 app=FastAPI(title='网域 · 网络运维助手',lifespan=lifespan)
+FRONTEND_DIST=config.ROOT/'frontend/dist'
 # 给浏览器提供 CSS 和 JavaScript 静态文件。
 app.mount('/static',StaticFiles(directory=config.ROOT/'app/static'),name='static')
+app.mount('/assets',StaticFiles(directory=FRONTEND_DIST/'assets',check_dir=False),name='frontend-assets')
 
 # 业务异常映射为 HTTP：冲突 409、不存在 404、参数错误 422。
 @app.exception_handler(tickets.Conflict)
@@ -43,7 +45,23 @@ async def invalid_handler(request,exc): return JSONResponse(status_code=422,cont
 
 # 页面与辅助接口：首页、应用存活、自建 SOP 和概览。
 @app.get('/')
-def index(): return FileResponse(config.ROOT/'app/static/index.html')
+@app.get('/assistant')
+@app.get('/devices')
+@app.get('/devices/{device_id}')
+@app.get('/tickets')
+@app.get('/tickets/{ticket_id}')
+def index():
+    # 只对已知页面提供 SPA 入口，未知 API 仍返回 404；支持详情页直接访问/刷新。
+    entry=FRONTEND_DIST/'index.html'
+    if not entry.is_file():
+        return JSONResponse(status_code=503,content={'detail':'前端尚未构建，请运行 .\\start.ps1 -BuildFrontend'})
+    return FileResponse(entry,headers={'Cache-Control':'no-cache'})
+
+@app.get('/favicon.svg')
+def favicon(): return FileResponse(config.ROOT/'frontend/public/favicon.svg')
+
+@app.get('/legacy')
+def legacy(): return FileResponse(config.ROOT/'app/static/index.html')
 
 @app.get('/health')
 # 只检查应用响应，未实时检测模型或 Milvus。

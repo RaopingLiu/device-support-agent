@@ -8,7 +8,7 @@ from test_business import payload
 def test_api_draft_workflow_and_restart(store):
     d=tickets.prepare(store,payload())
     with TestClient(app) as client:
-        assert client.get('/').status_code==200
+        assert client.get('/legacy').status_code==200
         assert client.get('/api/overview').json()['device_count']==140
         path=f'/api/sessions/{store}/drafts/{d["draft_id"]}'
         r=client.post(path+'/confirm',json={'expected_revision':2});assert r.status_code==409

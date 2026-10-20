@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from app import db, tickets
 from app.main import app
 from test_business import payload
+from app import main
 
 
 def test_device_detail_uses_session_scenario(store):
@@ -31,6 +32,20 @@ def test_device_filters_search_and_pagination(store):
         assert client.get(path, params={'q':"' OR 1=1 --"}).json()['total'] == 0
         assert client.get(path, params={'offset':-1}).status_code == 422
         assert client.get(path, params={'limit':51}).status_code == 422
+
+
+def test_spa_deep_links_and_api_404(store, tmp_path, monkeypatch):
+    frontend = tmp_path / 'frontend'
+    frontend.mkdir()
+    monkeypatch.setattr(main, 'FRONTEND_DIST', frontend)
+    with TestClient(app) as client:
+        assert client.get('/assistant').status_code == 503
+        (frontend / 'index.html').write_text('<html>React entry</html>', encoding='utf-8')
+        for path in ['/', '/assistant', '/devices', '/devices/S01-AP04', '/tickets', '/tickets/T-example']:
+            response = client.get(path)
+            assert response.status_code == 200 and 'React entry' in response.text
+            assert response.headers['cache-control'] == 'no-cache'
+        assert client.get('/api/not-a-route').status_code == 404
 
 
 def test_ticket_list_only_includes_confirmed_session_tickets(store):

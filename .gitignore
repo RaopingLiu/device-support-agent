@@ -28,3 +28,8 @@ docker-compose.official.yml
 .vscode/
 .DS_Store
 Thumbs.db
+node_modules/
+frontend/dist/
+.cache/
+playwright-report/
+test-results/
