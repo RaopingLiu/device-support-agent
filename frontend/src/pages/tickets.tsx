@@ -31,7 +31,7 @@ export function TicketsPage() {
     revision,
   );
   return (
-    <div className="detail-layout has-detail">
+    <div className="detail-layout has-detail ticket-layout">
       <section className="panel ticket-panel">
         <div className="panel-title">
           <h2>
