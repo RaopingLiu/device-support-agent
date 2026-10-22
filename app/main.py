@@ -46,6 +46,7 @@ async def invalid_handler(request,exc): return JSONResponse(status_code=422,cont
 # 页面与辅助接口：首页、应用存活、自建 SOP 和概览。
 @app.get('/')
 @app.get('/assistant')
+@app.get('/history')
 @app.get('/devices')
 @app.get('/devices/{device_id}')
 @app.get('/tickets')
@@ -90,6 +91,11 @@ class Edit(Revision): payload: tickets.DraftPayload
 # 新会话绑定场景；恢复会话接口返回网页历史与最新草稿。
 @app.post('/api/sessions')
 def create_session(body:NewSession): return {'session_id':db.new_session(body.scenario_id)}
+
+# 历史列表覆盖当前本机演示数据库；它不提供生产用户身份隔离。
+@app.get('/api/sessions')
+def session_list(q:str=Query('',max_length=200),offset:int=Query(0,ge=0),limit:int=Query(12,ge=1,le=50)):
+    return db.list_sessions(q,limit,offset)
 
 @app.get('/api/sessions/{sid}')
 def get_session(sid:str):

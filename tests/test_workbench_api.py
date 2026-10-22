@@ -41,7 +41,7 @@ def test_spa_deep_links_and_api_404(store, tmp_path, monkeypatch):
     with TestClient(app) as client:
         assert client.get('/assistant').status_code == 503
         (frontend / 'index.html').write_text('<html>React entry</html>', encoding='utf-8')
-        for path in ['/', '/assistant', '/devices', '/devices/S01-AP04', '/tickets', '/tickets/T-example']:
+        for path in ['/', '/assistant', '/history', '/devices', '/devices/S01-AP04', '/tickets', '/tickets/T-example']:
             response = client.get(path)
             assert response.status_code == 200 and 'React entry' in response.text
             assert response.headers['cache-control'] == 'no-cache'

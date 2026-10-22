@@ -56,6 +56,9 @@ def init_db():
           draft_revision INTEGER,session_id TEXT REFERENCES sessions,payload_json TEXT,status TEXT,created_at TEXT);
         CREATE TABLE IF NOT EXISTS ticket_devices(ticket_id TEXT REFERENCES tickets,device_id TEXT REFERENCES devices,
           PRIMARY KEY(ticket_id,device_id));
+        CREATE INDEX IF NOT EXISTS messages_session_order ON messages(session_id,id);
+        CREATE INDEX IF NOT EXISTS drafts_session_state ON ticket_drafts(session_id,state);
+        CREATE INDEX IF NOT EXISTS tickets_session ON tickets(session_id);
         ''')
 
 # 固定演示案例；同一设备在不同场景下可有不同状态。
@@ -135,3 +138,36 @@ def history(sid):
     session(sid)
     with connect() as c:
         return [{'role':r['role'],**json.loads(r['payload_json'])} for r in c.execute('SELECT * FROM messages WHERE session_id=? ORDER BY id',(sid,))]
+
+
+# 本机演示工作空间的历史索引；从已有记录派生标题和摘要，不调用模型或改变会话。
+def list_sessions(q='', limit=12, offset=0):
+    query=q.strip()
+    where='''WHERE (? = '' OR instr(lower(s.session_id),lower(?)) > 0
+        OR EXISTS (SELECT 1 FROM messages m WHERE m.session_id=s.session_id
+            AND instr(lower(COALESCE(json_extract(m.payload_json,'$.reply'),'')),lower(?)) > 0))'''
+    args=[query,query,query]
+    with connect() as c:
+        total=c.execute('SELECT count(*) FROM sessions s '+where,args).fetchone()[0]
+        rows=c.execute('''SELECT s.*,
+            (SELECT json_extract(payload_json,'$.reply') FROM messages
+                WHERE session_id=s.session_id AND role='user' ORDER BY id LIMIT 1) AS title,
+            (SELECT json_extract(payload_json,'$.reply') FROM messages
+                WHERE session_id=s.session_id ORDER BY id DESC LIMIT 1) AS preview,
+            (SELECT count(*) FROM messages WHERE session_id=s.session_id) AS message_count,
+            (SELECT count(*) FROM tickets WHERE session_id=s.session_id) AS ticket_count,
+            EXISTS(SELECT 1 FROM ticket_drafts WHERE session_id=s.session_id AND state='pending') AS has_draft,
+            max(s.created_at,
+                COALESCE((SELECT max(created_at) FROM messages WHERE session_id=s.session_id),s.created_at),
+                COALESCE((SELECT max(updated_at) FROM ticket_drafts WHERE session_id=s.session_id),s.created_at),
+                COALESCE((SELECT max(created_at) FROM tickets WHERE session_id=s.session_id),s.created_at)) AS updated_at
+            FROM sessions s '''+where+''' ORDER BY updated_at DESC,s.session_id DESC LIMIT ? OFFSET ?''',
+            args+[limit,offset]).fetchall()
+    summaries=[]
+    for row in rows:
+        item=dict(row)
+        item['title']=' '.join((item['title'] or '新会话').split())[:80]
+        item['preview']=' '.join((item['preview'] or '').split())[:180]
+        item['has_draft']=bool(item['has_draft'])
+        summaries.append(item)
+    return {'sessions':summaries,'total':total,'next_offset':offset+limit if offset+limit<total else None}
