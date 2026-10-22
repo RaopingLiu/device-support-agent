@@ -106,6 +106,23 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       finish();
     }
   }
+  async function switchSession(sid: string) {
+    // 与聊天、草稿写入共用互斥锁；读取成功后才替换当前会话。
+    if (!begin("session")) return false;
+    try {
+      const session = await api.session(sid);
+      localStorage.setItem(storageKey, session.session_id);
+      updateSession(session);
+      return true;
+    } catch (error) {
+      setNotice(
+        error instanceof Error ? error.message : "打开会话失败，请重试。",
+      );
+      return false;
+    } finally {
+      finish();
+    }
+  }
   async function editDraft(d: Draft, payload: DraftPayload) {
     if (!data || !begin("draft")) return;
     try {
@@ -182,6 +199,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         clearNotice: () => setNotice(""),
         send,
         newSession,
+        switchSession,
         editDraft,
         confirmDraft,
         cancelDraft,

@@ -125,3 +125,159 @@ test("窄屏设备空结果、网络错误重试和场景切换", async ({ page 
     page.getByRole("complementary", { name: "设备详情" }),
   ).toContainText("在线");
 });
+
+test("历史搜索找回旧会话、恢复草稿并继续对话，关联工单可再次打开", async ({
+  page,
+}) => {
+  await page.goto("/assistant");
+  await page.getByLabel("输入问题").fill("历史回看：仓储区反复掉线");
+  await page.getByRole("button", { name: "发送消息" }).click();
+  await expect(page.getByRole("region", { name: "运维对话" })).toContainText(
+    "测试替身",
+  );
+  const oldSid = await page.evaluate(() =>
+    localStorage.getItem("network-session"),
+  );
+  await page.getByLabel("输入问题").fill("请整理报障工单");
+  await page.getByRole("button", { name: "发送消息" }).click();
+  const draft = page.getByRole("region", { name: "报障草稿" });
+  await draft.getByLabel("影响范围").fill("历史记录中保存的扫码作业影响");
+  await draft.getByRole("button", { name: "保存修改" }).click();
+  await expect(draft).toContainText("版本 2");
+  await page.getByLabel("演示案例").selectOption("normal");
+  await page.getByRole("button", { name: "新建会话", exact: true }).click();
+  await page.getByRole("button", { name: "继续新建" }).click();
+  await expect(draft).toContainText("当前没有待确认草稿");
+  await expect(page.getByLabel("输入问题")).toHaveValue("");
+  const newSid = await page.evaluate(() =>
+    localStorage.getItem("network-session"),
+  );
+  expect(newSid).not.toBe(oldSid);
+  await page.getByLabel("输入问题").fill("历史回看：办公区网络检查");
+  await page.getByRole("button", { name: "发送消息" }).click();
+  await expect(page.getByRole("region", { name: "运维对话" })).toContainText(
+    "测试替身",
+  );
+  await page.getByRole("link", { name: "历史记录", exact: true }).click();
+  await page.getByLabel("搜索历史对话").fill("仓储区反复掉线");
+  await page.getByRole("button", { name: "搜索", exact: true }).click();
+  const oldItem = page.getByRole("article", {
+    name: "历史回看：仓储区反复掉线",
+    exact: true,
+  });
+  await expect(oldItem).toContainText("有待确认草稿");
+  expect(
+    await page.evaluate(() => localStorage.getItem("network-session")),
+  ).toBe(newSid);
+  await oldItem.getByRole("button", { name: "打开对话" }).click();
+  await expect(page).toHaveURL(/\/assistant$/);
+  await expect(page.getByLabel("演示案例")).toHaveValue("ap_offline");
+  await expect(draft.getByLabel("影响范围")).toHaveValue(
+    "历史记录中保存的扫码作业影响",
+  );
+  await page.reload();
+  await expect(draft).toContainText("版本 2");
+  expect(
+    await page.evaluate(() => localStorage.getItem("network-session")),
+  ).toBe(oldSid);
+  await page.getByLabel("输入问题").fill("补充反馈：已检查现场网线");
+  await page.getByRole("button", { name: "发送消息" }).click();
+  await expect(
+    page.getByRole("button", { name: "确认提交", exact: true }),
+  ).toBeEnabled();
+  const restored = await (
+    await page.request.get(`/api/sessions/${oldSid}`)
+  ).json();
+  expect(restored.messages[0].reply).toBe("历史回看：仓储区反复掉线");
+  expect(restored.messages.at(-2).reply).toBe("补充反馈：已检查现场网线");
+  expect(
+    (await (await page.request.get(`/api/sessions/${newSid}`)).json()).messages,
+  ).toHaveLength(2);
+  await draft.getByRole("button", { name: "确认提交", exact: true }).click();
+  await draft.getByRole("button", { name: "确认保存工单" }).click();
+  await expect(page.getByRole("region", { name: "工单详情" })).toBeVisible();
+  await page.getByRole("link", { name: "历史记录", exact: true }).click();
+  await page
+    .getByRole("article", { name: "历史回看：办公区网络检查", exact: true })
+    .getByRole("button", { name: "打开对话" })
+    .click();
+  await expect(page.getByLabel("演示案例")).toHaveValue("normal");
+  await page.getByRole("link", { name: "历史记录", exact: true }).click();
+  await oldItem.getByRole("button", { name: "查看工单" }).click();
+  await expect(page).toHaveURL(/\/tickets$/);
+  await expect(page.getByText("仓储区 AP 离线", { exact: true })).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("network-session")),
+  ).toBe(oldSid);
+});
+
+test("历史切换失败保留当前会话，处理消息时禁止切换，窄屏搜索可用", async ({
+  page,
+}) => {
+  await page.goto("/assistant");
+  await expect(page.getByLabel("输入问题")).toBeVisible();
+  const current = await page.evaluate(() =>
+    localStorage.getItem("network-session"),
+  );
+  const other = (
+    await (
+      await page.request.post("/api/sessions", {
+        data: { scenario_id: "wan_down" },
+      })
+    ).json()
+  ).session_id;
+  await page.request.post(`/api/sessions/${other}/messages`, {
+    data: { message: "切换失败测试的历史对话" },
+  });
+  await page.getByRole("link", { name: "历史记录", exact: true }).click();
+  const item = page.getByRole("article", {
+    name: "切换失败测试的历史对话",
+    exact: true,
+  });
+  await page.route(`**/api/sessions/${other}`, (route) =>
+    route.fulfill({
+      status: 503,
+      json: { detail: "测试：历史会话暂时无法打开" },
+    }),
+  );
+  await item.getByRole("button", { name: "打开对话" }).click();
+  await expect(page.getByRole("alert")).toContainText("历史会话暂时无法打开");
+  expect(
+    await page.evaluate(() => localStorage.getItem("network-session")),
+  ).toBe(current);
+  await page.unroute(`**/api/sessions/${other}`);
+  await item.getByRole("button", { name: "打开对话" }).click();
+  await expect(page.getByLabel("演示案例")).toHaveValue("wan_down");
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(`**/api/sessions/${other}/messages`, async (route) => {
+    await pending;
+    await route.continue();
+  });
+  try {
+    await page.getByLabel("输入问题").fill("继续排查出口链路");
+    await page.getByRole("button", { name: "发送消息" }).click();
+    await page.getByRole("link", { name: "历史记录", exact: true }).click();
+    await expect(item.getByRole("button", { name: "打开对话" })).toBeDisabled();
+  } finally {
+    release();
+  }
+  await expect(item.getByRole("button", { name: "打开对话" })).toBeEnabled();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByLabel("搜索历史对话").fill("找不到的历史记录关键词");
+  await page.getByRole("button", { name: "搜索", exact: true }).click();
+  await expect(page.getByText("没有找到匹配的历史记录")).toBeVisible();
+  await page.getByRole("button", { name: "清除搜索" }).click();
+  await expect(item).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "历史记录", exact: true }),
+  ).toBeVisible();
+});

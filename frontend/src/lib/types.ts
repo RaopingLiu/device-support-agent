@@ -105,6 +105,22 @@ export interface Session {
   messages: Message[];
   draft: Draft | null;
 }
+export interface SessionSummary {
+  session_id: string;
+  scenario_id: string;
+  created_at: string;
+  updated_at: string;
+  title: string;
+  preview: string;
+  message_count: number;
+  ticket_count: number;
+  has_draft: boolean;
+}
+export interface SessionPage {
+  sessions: SessionSummary[];
+  total: number;
+  next_offset: number | null;
+}
 export interface DevicePage {
   devices: Device[];
   total: number;

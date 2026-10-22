@@ -13,6 +13,7 @@ import {
   ArrowUpRight,
   CircleHelp,
   ClipboardList,
+  History,
   Layers3,
   Monitor,
   Plus,
@@ -26,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { AssistantPage } from "@/pages/assistant";
 import { DevicesPage } from "@/pages/devices";
 import { TicketsPage } from "@/pages/tickets";
+import { HistoryPage } from "@/pages/history";
 
 const pages = [
   {
@@ -46,8 +48,19 @@ const pages = [
     icon: ClipboardList,
     description: "核对故障信息，管理当前会话的报障记录。",
   },
+  {
+    path: "/history",
+    title: "历史记录",
+    icon: History,
+    description: "回看过去的排查过程，继续对话或查看关联工单。",
+  },
 ];
 function Shell() {
+  const { session } = useWorkspace();
+  // 切换会话后重建页面局部状态，避免沿用旧案例选择和未发送的输入。
+  return <SessionShell key={session.session_id} />;
+}
+function SessionShell() {
   const { overview, session, busy, notice, clearNotice, newSession } =
     useWorkspace();
   const location = useLocation();
@@ -214,6 +227,7 @@ function Shell() {
           <Routes>
             <Route path="/" element={<Navigate replace to="/assistant" />} />
             <Route path="/assistant" element={<AssistantPage />} />
+            <Route path="/history" element={<HistoryPage />} />
             <Route path="/devices" element={<DevicesPage />} />
             <Route path="/devices/:deviceId" element={<DevicesPage />} />
             <Route path="/tickets" element={<TicketsPage />} />

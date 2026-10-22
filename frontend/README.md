@@ -42,6 +42,7 @@ npm run test:e2e
 | `src/pages/assistant.tsx` | 聊天、查询轨迹和资料引用 |
 | `src/pages/devices.tsx` | 搜索、筛选、分页、设备详情和排查入口 |
 | `src/pages/tickets.tsx` | 当前会话工单列表和持久化详情 |
+| `src/pages/history.tsx` | 历史会话搜索、分页、恢复对话和关联工单入口 |
 | `src/components/draft-card.tsx` | 编辑、取消和两步确认草稿 |
 | `src/components/ui/` | 从 shadcn/ui 官方 registry 引入的基础组件 |
 | `src/lib/types.ts` | 与当前 HTTP 响应对应的 TypeScript 数据类型 |
@@ -49,7 +50,7 @@ npm run test:e2e
 | `src/lib/workspace.tsx` | 会话初始化、消息、草稿和写操作状态 |
 | `src/hooks/use-resource.ts` | 页面读取请求的取消、加载、错误和重试 |
 
-浏览器只用 localStorage 保存会话 ID。对话和草稿从后端恢复。类型定义用于开发时检查，业务规则仍由后端校验。
+浏览器只用 localStorage 保存当前会话 ID。对话和草稿从后端恢复。“历史记录”通过 `GET /api/sessions?q=…&offset=…&limit=12` 查询本机工作空间，支持完整对话正文搜索；打开会话读取成功后才更新当前 ID，失败时保留原会话。切换与聊天/草稿操作共用互斥状态，避免处理中切换导致结果串入其他会话。类型定义用于开发时检查，业务规则仍由后端校验。
 
 当前采用完整 JSON 响应。页面中的等待提示不表示已实现模型流式输出或 SSE。模型回复以 React 文本节点渲染，仅支持加粗和行内代码；来源链接仅接受 HTTP/HTTPS。
 
@@ -61,5 +62,6 @@ npm run test:e2e
 4. 告诉助手实际故障现象、影响范围和已经确认做过的检查，明确要求整理工单草稿。
 5. 修改草稿摘要，保存修改，再确认提交。
 6. 跳转工单详情，刷新后核对工单仍可查询；在列表中检查仅有一份正式记录。
+7. 新建另一会话后，从历史记录搜索并恢复原来的对话，或打开其关联工单；刷新后仍保留所选会话。
 
 原生前端保留在 `/legacy` 作为历史版本对照。原始设备/资料演示边界见根目录 README。

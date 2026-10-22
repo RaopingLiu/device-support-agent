@@ -10,6 +10,7 @@ export interface Workspace {
   clearNotice: () => void;
   send: (message: string) => Promise<void>;
   newSession: (scenario: string) => Promise<boolean>;
+  switchSession: (sid: string) => Promise<boolean>;
   editDraft: (d: Draft, payload: DraftPayload) => Promise<void>;
   confirmDraft: (d: Draft) => Promise<Ticket | undefined>;
   cancelDraft: (d: Draft) => Promise<void>;

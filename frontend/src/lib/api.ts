@@ -6,6 +6,7 @@ import type {
   DraftPayload,
   Overview,
   Session,
+  SessionPage,
   Ticket,
   TicketPage,
 } from "./types";
@@ -64,6 +65,8 @@ export const api = {
   createSession: (scenario_id: string) =>
     request<{ session_id: string }>("/api/sessions", json({ scenario_id })),
   session: (sid: string) => request<Session>(base(sid)),
+  sessions: (params: URLSearchParams, signal?: AbortSignal) =>
+    request<SessionPage>(`/api/sessions?${params}`, { signal }),
   chat: (sid: string, message: string) =>
     request<ChatReply>(`${base(sid)}/messages`, json({ message })),
   devices: (sid: string, params: URLSearchParams, signal?: AbortSignal) =>
